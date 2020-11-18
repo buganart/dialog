@@ -13,8 +13,19 @@ mkShell {
       jupyter
       pytorch-bin
       pandas
-      transformers
+      (transformers.overridePythonAttrs (old: {
+        version = "3.5.1-dev";
+        src = fetchFromGitHub {
+          owner = "huggingface";
+          repo = "transformers";
+          rev = "2819da02f7e3d0c0328daef12115d7a0cc78fc12";
+          sha256 = "1xm02jmsaj9i5nj80ryml83fycr080dfw0crzzc06bzcpy5szfra";
+          fetchSubmodules = true;
+        };
+        doCheck = false;
+      }))
 
+      tqdm
       scikitlearn
 
       # 2020-08-07: wandb not yet available in nixpkgs
@@ -22,10 +33,8 @@ mkShell {
 
       # dev deps
       pudb  # debugger
-      # black
       ipython
       pyls-isort
-      # pyls-black
       pyls-mypy
       python-language-server
     ]))
