@@ -1,4 +1,5 @@
 import itertools
+import pprint
 
 from typing import List
 
@@ -13,12 +14,27 @@ from transformers import PreTrainedTokenizer
 from data_collator import DataCollatorForLanguageModeling
 
 
-def main():
+def construct_conv(lines, tokenizer, eos=True):
+    conv = [tokenizer.encode(line) + [tokenizer.eos_token_id] for line in lines]
+    return list(itertools.chain.from_iterable(conv))
 
-    tokenizer = AutoTokenizer.from_pretrained(
-        "microsoft/DialoGPT-small",
-        pad_token="[PAD]",
-    )
+
+class ConversationDataset(Dataset):
+    def __init__(self, tokenizer: PreTrainedTokenizer, contexted):
+
+        self.examples = []
+        for lines in tqdm.tqdm(contexted, desc="Tokenizing"):
+            conv = construct_conv(lines, tokenizer)
+            self.examples.append(conv)
+
+    def __len__(self):
+        return len(self.examples)
+
+    def __getitem__(self, item):
+        return torch.tensor(self.examples[item], dtype=torch.long)
+
+
+def main():
 
     contexted = []
 
@@ -34,43 +50,23 @@ def main():
     num_samples = len(contexted)
 
     print("EXAMPLE WITH CONTEXT")
-    print(contexted[0])
+    pprint.pprint(contexted[0])
     print()
-
-    def construct_conv(lines, tokenizer, eos=True):
-        conv = [tokenizer.encode(line) + [tokenizer.eos_token_id] for line in lines]
-        flat = list(itertools.chain.from_iterable(conv))
-
-        # TODO Do we really need to pad and truncate here?
-        seq_len = 512
-        flat = flat[:seq_len]
-        return tokenizer.pad(
-            {"input_ids": flat}, padding="max_length", max_length=seq_len
-        )["input_ids"]
-
-    class ConversationDataset(Dataset):
-        def __init__(self, tokenizer: PreTrainedTokenizer, contexted):
-
-            self.examples = []
-            for lines in tqdm.tqdm(contexted, desc="Tokenizing"):
-                conv = construct_conv(lines, tokenizer)
-                self.examples.append(conv)
-
-        def __len__(self):
-            return len(self.examples)
-
-        def __getitem__(self, item):
-            return torch.tensor(self.examples[item], dtype=torch.long)
 
     split_at = int(num_samples * 0.8)
     train_split, val_split = contexted[:split_at], contexted[split_at:]
+
+    tokenizer = AutoTokenizer.from_pretrained(
+        "microsoft/DialoGPT-small",
+        pad_token="[PAD]",
+    )
 
     train_dataset = ConversationDataset(tokenizer, train_split)
     val_dataset = ConversationDataset(tokenizer, val_split)
 
     training_args = TrainingArguments(
         output_dir="./results",  # output directory
-        num_train_epochs=3,  # total number of training epochs
+        num_train_epochs=1,  # total number of training epochs
         per_device_train_batch_size=4,  # batch size per device during training
         per_device_eval_batch_size=4,  # batch size for evaluation
         warmup_steps=500,  # number of warmup steps for learning rate scheduler
