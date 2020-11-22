@@ -11,3 +11,9 @@ Cuda, python,
 ## Finetuning
 
     finetune
+
+## Todo
+
+- [x] Training.
+- [ ] Save models.
+- [ ] Predictions.

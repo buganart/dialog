@@ -141,3 +141,4 @@ wandb/
 *.npy
 *.jpg
 .build/
+data/

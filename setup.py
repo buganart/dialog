@@ -18,7 +18,7 @@ setup(
     entry_points={
         "console_scripts": [
             "finetune = dialog.finetune:main",
+            "generate = dialog.generate:main",
         ]
     },
-
 )
