@@ -3,18 +3,18 @@ import itertools
 import pprint
 from pathlib import Path
 
-from typing import List
-
-import tqdm
 import torch
-from torch.utils.data import Dataset
+import tqdm
 import wandb
-from transformers import Trainer, TrainingArguments
-from transformers import AutoModelForCausalLM, AutoTokenizer
-from transformers import PreTrainedTokenizer
-
-
-from data_collator import DataCollatorForLanguageModeling
+from torch.utils.data import Dataset
+from transformers import (
+    AutoModelForCausalLM,
+    AutoTokenizer,
+    DataCollatorForLanguageModeling,
+    PreTrainedTokenizer,
+    Trainer,
+    TrainingArguments,
+)
 
 
 def construct_conv(lines, tokenizer, eos=True):
