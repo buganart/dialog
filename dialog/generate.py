@@ -1,16 +1,30 @@
 #!/usr/bin/env python3
 import argparse
+from pathlib import Path
 
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
 
-def generate(*, prefix, num_context, checkpoint_dir, steps):
-    tokenizer = AutoTokenizer.from_pretrained(
-        "microsoft/DialoGPT-small",
+def load_model(checkpoint_dir: Path):
+    return AutoModelForCausalLM.from_pretrained(checkpoint_dir)
+
+
+def load_tokenizer(checkpoint_dir: Path):
+    return AutoTokenizer.from_pretrained(
+        checkpoint_dir,
         pad_token="[PAD]",  # TODO should we set this?
     )
-    model = AutoModelForCausalLM.from_pretrained(checkpoint_dir)
+
+
+def generate(
+    *,
+    model,
+    tokenizer,
+    prefix,
+    steps: int = 10,
+    num_context: int = 7,
+):
 
     input_ids = tokenizer.encode(prefix + tokenizer.eos_token, return_tensors="pt")
 
@@ -44,7 +58,17 @@ def main():
     parser.add_argument("--num-context", default=7, type=int)
     parser.add_argument("--steps", default=10, type=int)
     args = parser.parse_args()
-    return generate(**vars(args))
+
+    model = load_model(args.checkpoint_dir)
+    tokenizer = load_tokenizer(args.checkpoint_dir)
+
+    return generate(
+        model=model,
+        tokenizer=tokenizer,
+        prefix=args.prefix,
+        steps=args.steps,
+        num_context=args.num_context,
+    )
 
 
 if __name__ == "__main__":

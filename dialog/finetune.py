@@ -55,11 +55,16 @@ def train(
     save_dir: str,
     num_context: int = 7,
     save_steps: int = 500,
+    pretrained_model: str = "microsoft/DialoGPT-small",
     extra_trainer_args=None,
 ):
 
     text_file_paths = list(Path(text_dir).rglob("*.txt"))
-    pprint.pprint(text_file_paths)
+
+    for path in text_file_paths:
+        print("Using text files:")
+        print(f"=> {path}")
+        print()
 
     documents = [read_lines(path) for path in text_file_paths]
 
@@ -71,8 +76,9 @@ def train(
 
     num_samples = len(contexted)
 
-    print("EXAMPLE WITH CONTEXT")
-    pprint.pprint(contexted[0])
+    print("Example with context:")
+    for line in contexted[0]:
+        print(f"=> {line}")
     print()
 
     split_at = int(num_samples * 0.8)
@@ -82,11 +88,12 @@ def train(
         dir=save_dir,
         reinit=True,
         resume=False,
+        save_code=True,
     )
 
     default_trainer_args = dict(
         output_dir=wandb.run.dir,  # output directory
-        num_train_epochs=10,  # total number of training epochs
+        num_train_epochs=3,  # total number of training epochs
         per_device_train_batch_size=2,  # batch size per device during training
         per_device_eval_batch_size=2,  # batch size for evaluation
         warmup_steps=10,  # number of warmup steps for learning rate scheduler
@@ -97,20 +104,24 @@ def train(
         evaluation_strategy="epoch",
         gradient_accumulation_steps=10,
         run_name=None,
+        load_best_model_at_end=True,
     )
 
     args = {**default_trainer_args, **(extra_trainer_args or {})}
     training_args = TrainingArguments(**args)
 
+    print("TRAINING ARGS")
+    pprint.pprint(training_args.__dict__)
+
     tokenizer = AutoTokenizer.from_pretrained(
-        "microsoft/DialoGPT-small",
+        pretrained_model,
         pad_token="[PAD]",  # TODO should we set this?
     )
 
     train_dataset = ConversationDataset(tokenizer, train_split)
     val_dataset = ConversationDataset(tokenizer, val_split)
 
-    model = AutoModelForCausalLM.from_pretrained("microsoft/DialoGPT-small")
+    model = AutoModelForCausalLM.from_pretrained(pretrained_model)
     model.resize_token_embeddings(len(tokenizer))
 
     data_collator = DataCollatorForLanguageModeling(
@@ -124,10 +135,12 @@ def train(
         train_dataset=train_dataset,  # training dataset
         eval_dataset=val_dataset,  # evaluation dataset
         data_collator=data_collator,
+        tokenizer=tokenizer,
     )
 
     trainer.train()
     print("Finished training.")
+    return trainer
 
 
 def main():
