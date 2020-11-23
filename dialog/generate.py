@@ -22,11 +22,14 @@ def generate(
     model,
     tokenizer,
     prefix,
+    device,
     steps: int = 10,
     num_context: int = 7,
 ):
 
-    input_ids = tokenizer.encode(prefix + tokenizer.eos_token, return_tensors="pt")
+    input_ids = tokenizer.encode(prefix + tokenizer.eos_token, return_tensors="pt").to(
+        device
+    )
 
     print(f"PREFIX: {prefix}")
 
@@ -59,13 +62,15 @@ def main():
     parser.add_argument("--steps", default=10, type=int)
     args = parser.parse_args()
 
-    model = load_model(args.checkpoint_dir)
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    model = load_model(args.checkpoint_dir).to(device)
     tokenizer = load_tokenizer(args.checkpoint_dir)
 
     return generate(
         model=model,
         tokenizer=tokenizer,
         prefix=args.prefix,
+        device=device,
         steps=args.steps,
         num_context=args.num_context,
     )
