@@ -11,7 +11,7 @@ setup(
         "tqdm",
         # XXX Switch back to "transformers" when transformers v3.5.2 or higher is released
         # "transformers"
-        "transformers @ https://github.com/huggingface/transformers/archive/e1f3156b218956d1c4b8904dfcffaa19a2138f6a.zip"
+        "transformers @ https://github.com/huggingface/transformers/archive/e1f3156b218956d1c4b8904dfcffaa19a2138f6a.zip",
         "wandb",
     ],
     use_scm_version=True,
