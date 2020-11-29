@@ -1,6 +1,7 @@
 import argparse
 import itertools
 import pprint
+import warnings
 from pathlib import Path
 
 import torch
@@ -29,9 +30,33 @@ def contextualize(lines, num_context):
     ]
 
 
-def read_lines(path):
-    with open(path) as f:
+def read_lines_warn_on_error(path):
+    try:
+        return read_lines(path)
+    except UnicodeDecodeError as exc:
+
+        warnings.warn(
+            f"Errors when reading file {path}: {exc}\n"
+            "Will replace offending characters."
+        )
+
+        return read_lines(path, errors="replace")
+
+
+def read_lines(path, errors=None):
+    with open(path, errors=errors) as f:
         return [line.strip() for line in f]
+
+
+def read_text_dir(text_dir):
+    text_file_paths = list(Path(text_dir).rglob("*.txt"))
+
+    print("Using text files:")
+    for path in text_file_paths:
+        print(f"=> {path}")
+    print()
+
+    return [read_lines_warn_on_error(path) for path in text_file_paths]
 
 
 class ConversationDataset(Dataset):
@@ -59,14 +84,7 @@ def train(
     extra_trainer_args=None,
 ):
 
-    text_file_paths = list(Path(text_dir).rglob("*.txt"))
-
-    for path in text_file_paths:
-        print("Using text files:")
-        print(f"=> {path}")
-        print()
-
-    documents = [read_lines(path) for path in text_file_paths]
+    documents = read_text_dir(text_dir)
 
     contexted = list(
         itertools.chain.from_iterable(
