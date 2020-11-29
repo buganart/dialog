@@ -24,6 +24,7 @@ mkShell {
         };
         doCheck = false;
       }))
+      spacy
 
       tqdm
       scikitlearn

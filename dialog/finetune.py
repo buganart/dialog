@@ -7,6 +7,8 @@ from pathlib import Path
 import torch
 import tqdm
 import wandb
+from spacy.language import Language
+from spacy.lang.en import English
 from torch.utils.data import Dataset
 from transformers import (
     AutoModelForCausalLM,
@@ -16,6 +18,47 @@ from transformers import (
     Trainer,
     TrainingArguments,
 )
+
+
+def read_file(path, encoding):
+    with open(path, encoding=encoding) as f:
+        return f.read()
+
+
+def read_file_try_encodings(path, encodings=("utf8", "windows-1252")):
+    exceptions = []
+    for encoding in encodings:
+        try:
+            return read_file(path, encoding)
+        except UnicodeDecodeError as exc:
+            exceptions.append(exc)
+    raise ValueError(
+        f"Reading file {path} with encodings {encodings} failed: {exceptions}"
+    )
+
+
+def create_nlp():
+    nlp = English()
+    nlp.add_pipe(nlp.create_pipe("sentencizer"))
+    return nlp
+
+
+def extract_sentences(text, nlp: Language):
+    document = nlp(text)
+    return [sentence.text.strip() for sentence in document.sents]
+
+
+def read_text_dir(text_dir, nlp: Language):
+    text_file_paths = list(Path(text_dir).rglob("*.txt"))
+
+    print("Using text files:")
+    for path in text_file_paths:
+        print(f"=> {path}")
+    print()
+
+    texts = [read_file_try_encodings(path) for path in text_file_paths]
+    sentences = [extract_sentences(text, nlp) for text in texts]
+    return sentences
 
 
 def construct_conv(lines, tokenizer, eos=True):
@@ -28,35 +71,6 @@ def contextualize(lines, num_context):
         lines[conv_start_index : conv_start_index + num_context]
         for conv_start_index, _ in enumerate(lines[num_context:])
     ]
-
-
-def read_lines_warn_on_error(path):
-    try:
-        return read_lines(path)
-    except UnicodeDecodeError as exc:
-
-        warnings.warn(
-            f"Errors when reading file {path}: {exc}\n"
-            "Will replace offending characters."
-        )
-
-        return read_lines(path, errors="replace")
-
-
-def read_lines(path, errors=None):
-    with open(path, errors=errors) as f:
-        return [line.strip() for line in f]
-
-
-def read_text_dir(text_dir):
-    text_file_paths = list(Path(text_dir).rglob("*.txt"))
-
-    print("Using text files:")
-    for path in text_file_paths:
-        print(f"=> {path}")
-    print()
-
-    return [read_lines_warn_on_error(path) for path in text_file_paths]
 
 
 class ConversationDataset(Dataset):
@@ -84,7 +98,8 @@ def train(
     extra_trainer_args=None,
 ):
 
-    documents = read_text_dir(text_dir)
+    nlp = create_nlp()
+    documents = read_text_dir(text_dir, nlp)
 
     contexted = list(
         itertools.chain.from_iterable(

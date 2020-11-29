@@ -8,6 +8,7 @@ setup(
     packages=find_packages(),
     install_requires=[
         "pandas",
+        "spacy",
         "torch",
         "tqdm",
         # XXX Switch back to "transformers" when transformers v3.5.2 or higher is released
