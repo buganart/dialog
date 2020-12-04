@@ -1,23 +1,20 @@
 import argparse
 import itertools
 import pprint
-import warnings
 from pathlib import Path
 
-import torch
-import tqdm
 import wandb
-from spacy.language import Language
 from spacy.lang.en import English
-from torch.utils.data import Dataset
+from spacy.language import Language
 from transformers import (
     AutoModelForCausalLM,
     AutoTokenizer,
     DataCollatorForLanguageModeling,
-    PreTrainedTokenizer,
     Trainer,
     TrainingArguments,
 )
+
+from .data import ConversationDataset, contextualize
 
 
 def read_file(path, encoding):
@@ -59,33 +56,6 @@ def read_text_dir(text_dir, nlp: Language):
     texts = [read_file_try_encodings(path) for path in text_file_paths]
     sentences = [extract_sentences(text, nlp) for text in texts]
     return sentences
-
-
-def construct_conv(lines, tokenizer, eos=True):
-    conv = [tokenizer.encode(line) + [tokenizer.eos_token_id] for line in lines]
-    return list(itertools.chain.from_iterable(conv))
-
-
-def contextualize(lines, num_context):
-    return [
-        lines[conv_start_index : conv_start_index + num_context]
-        for conv_start_index, _ in enumerate(lines[num_context:])
-    ]
-
-
-class ConversationDataset(Dataset):
-    def __init__(self, tokenizer: PreTrainedTokenizer, contexted):
-
-        self.examples = []
-        for lines in tqdm.tqdm(contexted, desc="Tokenizing"):
-            conv = construct_conv(lines, tokenizer)
-            self.examples.append(conv)
-
-    def __len__(self):
-        return len(self.examples)
-
-    def __getitem__(self, item):
-        return torch.tensor(self.examples[item], dtype=torch.long)
 
 
 def train(

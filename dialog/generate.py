@@ -1,9 +1,13 @@
 #!/usr/bin/env python3
 import argparse
+import collections
 from pathlib import Path
+from typing import List
 
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer
+
+from .data import tokenize_context, to_torch
 
 
 def load_model(checkpoint_dir: Path):
@@ -17,41 +21,58 @@ def load_tokenizer(checkpoint_dir: Path):
     )
 
 
+def generate_answer(
+    model,
+    tokenizer,
+    device: torch.device,
+    context: List[str],
+    top_k: int = 50,
+    top_p: float = 0.95,
+    **kwargs,
+) -> str:
+
+    input_ids = to_torch([tokenize_context(context, tokenizer)]).to(device)
+
+    output_ids = model.generate(
+        input_ids,
+        max_length=1000,
+        pad_token_id=tokenizer.eos_token_id,
+        do_sample=True,
+        top_k=top_k,
+        top_p=top_p,
+        **kwargs,
+    )
+    end_of_context = input_ids.shape[-1]
+    return tokenizer.decode(
+        output_ids[:, end_of_context:][0],
+        skip_special_tokens=True,
+    )
+
+
 def generate(
     *,
     model,
     tokenizer,
-    prefix,
-    device,
+    device: torch.device,
+    prefix: str,
     steps: int = 10,
     num_context: int = 7,
 ):
 
-    input_ids = tokenizer.encode(prefix + tokenizer.eos_token, return_tensors="pt").to(
-        device
-    )
-
     print(f"PREFIX: {prefix}")
+    context = collections.deque([prefix], maxlen=num_context)
 
     for step in range(steps):
 
-        output_ids = model.generate(
-            input_ids,
-            max_length=1000,
-            pad_token_id=tokenizer.eos_token_id,
-            do_sample=True,
-            top_k=50,
-            top_p=0.95,
+        answer = generate_answer(
+            model,
+            tokenizer,
+            device,
+            context,
         )
+        print(answer)
 
-        print(
-            tokenizer.decode(
-                output_ids[:, input_ids.shape[-1] :][0],
-                skip_special_tokens=True,
-            )
-        )
-
-        input_ids = output_ids
+        context.append(answer)
 
 
 def main():
