@@ -42,15 +42,19 @@ be installed.
 
 Import docker container
 
-    docker load < ...docker-image-dialog-api.tar.gz
+    docker load --input result
 
 Run the API server with docker
 
-    docker run -p 8080:8080 -e CHECKPOINT_DIR=/checkpoint -v /path/to/model/checkpoint/directory:/checkpoint -it dialog-api:0.1.0
+    docker run -p 8080:8080 -e CHECKPOINT_DIR=/checkpoint -v /path/to/model/checkpoint/directory:/checkpoint -it buganart/dialog-api:0.1.1
 
 Note the volume mount from the host file system to `/checkpoint` inside
 the docker container. This can be used to choose which model to run (via a
 different checkpoint).
+
+Or to use a pretrained model
+
+    docker run -p 8080:8080 -e CHECKPOINT_DIR=microsoft/DialoGPT-small -it buganart/dialog-api:0.1.1
 
 #### Docker on Windows
 Have not tested running anything on windows but I found this article about
