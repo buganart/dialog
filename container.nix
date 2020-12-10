@@ -2,7 +2,7 @@ with (import ./nix/nixpkgs.nix {
   overlays = [ (import ./nix/overlay.nix) ];
 });
 
-{ imageName ? "dialog-api", version ? "0.1.0" }:
+{ imageName ? "dialog-api", version ? "0.1.1" }:
 
 let
   app = with python3.pkgs; buildPythonPackage {

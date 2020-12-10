@@ -13,7 +13,7 @@ app.config["SERVER_NAME"] = os.environ.get("SERVER_NAME")
 
 @app.route("/generate", methods=["post"])
 def generate():
-    req = request.json
+    req = request.get_json(force=True)
 
     context = req["context"]
     print(f"Input: {context}")
