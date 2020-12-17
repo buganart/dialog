@@ -52,6 +52,12 @@ Note the volume mount from the host file system to `/checkpoint` inside
 the docker container. This can be used to choose which model to run (via a
 different checkpoint).
 
+On windows with WSL2 the windows drives are accessible under `/mnt/`, for example
+
+    docker run -p 8080:8080 -e CHECKPOINT_DIR=/checkpoint -v /mnt/c/Users/.../GANS/checkpoint-7161:/checkpoint -it buganart/dialog-api:0.1.1
+
+Note that these paths are case sensitive: `/mnt/C` does not work.
+
 Or to use a pretrained model
 
     docker run -p 8080:8080 -e CHECKPOINT_DIR=microsoft/DialoGPT-small -it buganart/dialog-api:0.1.1
