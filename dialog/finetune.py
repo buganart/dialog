@@ -63,6 +63,7 @@ def train(
     text_dir: str,
     save_dir: str,
     num_context: int = 7,
+    batch_size: int = 2,
     save_steps: int = 500,
     pretrained_model: str = "microsoft/DialoGPT-small",
     extra_trainer_args=None,
@@ -97,8 +98,8 @@ def train(
     default_trainer_args = dict(
         output_dir=wandb.run.dir,  # output directory
         num_train_epochs=3,  # total number of training epochs
-        per_device_train_batch_size=2,  # batch size per device during training
-        per_device_eval_batch_size=2,  # batch size for evaluation
+        per_device_train_batch_size=batch_size,  # batch size per device during training
+        per_device_eval_batch_size=batch_size,  # batch size for evaluation
         warmup_steps=10,  # number of warmup steps for learning rate scheduler
         weight_decay=0.01,  # strength of weight decay
         logging_dir="./logs",  # directory for storing logs
