@@ -47,6 +47,7 @@ the docker container. This can be used to choose which model to run (via a
 different checkpoint).
 
 On windows with WSL2 the windows drives are accessible with the path format below, for example
+
     docker run -it --rm -p 8080:8080 -v d:/path/to/checkpoint_folder:/checkpoint buganart/dialog-api:0.1.2 python api.py --checkpoint-dir /checkpoint
 
 
