@@ -7,7 +7,7 @@ from typing import List
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
-from .data import tokenize_context, to_torch
+from data import tokenize_context, to_torch
 
 
 def load_model(checkpoint_dir: Path):

@@ -4,7 +4,13 @@ import click
 import torch
 from flask import Flask, jsonify, request
 
-from .generate import generate_answer, load_model, load_tokenizer
+from generate import generate_answer, load_model, load_tokenizer
+
+import nltk
+
+nltk.download("vader_lexicon")
+
+from nltk.sentiment.vader import SentimentIntensityAnalyzer
 
 app = Flask(__name__)
 app.config["MAX_CONTENT_LENGTH"] = 5 * 1024 * 1024
@@ -25,7 +31,12 @@ def generate():
         context=context,
     )
 
-    return jsonify(context=context, answer=answer)
+    print(f"Answer: {answer}")
+
+    sid = SentimentIntensityAnalyzer()
+    ss = sid.polarity_scores(answer)
+
+    return jsonify(context=context, answer=answer, score=ss)
 
 
 # @app.route("/version", methods=["GET"])

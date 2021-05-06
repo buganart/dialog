@@ -3,4 +3,11 @@ pytest>=6.1.2
 pytest-cov>=2.10.1
 pytest-watch>=4.2.0
 pre-commit
--e .
+flask
+click
+spacy
+torch
+tqdm
+transformers @ https://github.com/huggingface/transformers/archive/e1f3156b218956d1c4b8904dfcffaa19a2138f6a.zip
+wandb
+nltk

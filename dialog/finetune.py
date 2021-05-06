@@ -14,7 +14,7 @@ from transformers import (
     TrainingArguments,
 )
 
-from .data import ConversationDataset, contextualize
+from data import ConversationDataset, contextualize
 
 
 def read_file(path, encoding):
