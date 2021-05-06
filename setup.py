@@ -9,6 +9,7 @@ setup(
     packages=find_packages(),
     install_requires=[
         "click",
+        "flask",
         "spacy",
         "torch",
         "tqdm",
@@ -17,6 +18,7 @@ setup(
         # "transformers"
         "transformers @ https://github.com/huggingface/transformers/archive/e1f3156b218956d1c4b8904dfcffaa19a2138f6a.zip",  # noqa: E501
         "wandb",  # not in nixpkgs, assume manually installed
+        "nltk",
     ],
     entry_points={
         "console_scripts": [

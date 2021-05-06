@@ -6,7 +6,7 @@ Fine tune DialoGPT.
 
 Cuda, python,
 
-    pip install -r requirements.txt
+    pip install -e .
 
 ## Finetuning
 
@@ -27,40 +27,28 @@ Install dependencies
 
 Run the API server with local checkpoint directory
 
-    dialog-api --checkpoint-dir /path/to/model/checkpoint/directory
+    python api.py --checkpoint-dir /path/to/model/checkpoint/directory
 
 Or with a pretrained model
 
-    dialog-api --checkpoint-dir microsoft/DialoGPT-small
+    python api.py --checkpoint-dir microsoft/DialoGPT-small
 
 ### Docker
-Build docker container (*or* get the docker container from somewhere else).
-Building requires the [nix](https://nixos.org/download.html) package manager to
-be installed.
+Build docker container with the Dockerfile.
 
-    nix-build container.nix
+    docker build -t <image name> .
 
-Import docker container
+Run the API server with docker using a pretrained model (get the uploaded docker container from buganart/)
 
-    docker load --input result
-
-Run the API server with docker
-
-    docker run -p 8080:8080 -e CHECKPOINT_DIR=/checkpoint -v /path/to/model/checkpoint/directory:/checkpoint -it buganart/dialog-api:0.1.1
+    docker run -it --rm -p 8080:8080 buganart/dialog-api:0.1.2 python api.py --checkpoint-dir microsoft/DialoGPT-small
 
 Note the volume mount from the host file system to `/checkpoint` inside
 the docker container. This can be used to choose which model to run (via a
 different checkpoint).
 
-On windows with WSL2 the windows drives are accessible under `/mnt/`, for example
+On windows with WSL2 the windows drives are accessible with the path format below, for example
+    docker run -it --rm -p 8080:8080 -v d:/path/to/checkpoint_folder:/checkpoint buganart/dialog-api:0.1.2 python api.py --checkpoint-dir /checkpoint
 
-    docker run -p 8080:8080 -e CHECKPOINT_DIR=/checkpoint -v /mnt/c/Users/.../GANS/checkpoint-7161:/checkpoint -it buganart/dialog-api:0.1.1
-
-Note that these paths are case sensitive: `/mnt/C` does not work.
-
-Or to use a pretrained model
-
-    docker run -p 8080:8080 -e CHECKPOINT_DIR=microsoft/DialoGPT-small -it buganart/dialog-api:0.1.1
 
 #### Docker on Windows
 Have not tested running anything on windows but I found this article about
@@ -73,22 +61,4 @@ https://hackernoon.com/how-to-run-docker-linux-containers-natively-on-windows-ti
 
 Returns a JSON object with an `answer` field.
 
-    {"answer":"The greatest album of all time.","context":["Go Away."]}
-
-
-## Development
-Install dependencies
-
-    pip install -r requirements.txt
-
-Run tests
-
-    pytest
-
-## Todo
-
-- [x] Training.
-- [x] Save models.
-- [x] Predictions.
-- [x] Colab.
-- [x] API.
+    {"answer":"The greatest album of all time.","context":["Go Away."], "score":{"compound": 0.3612,"neg": 0.0,"neu": 0.0,"pos": 1.0}
